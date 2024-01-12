@@ -115,8 +115,8 @@ def get_install_requirements(install_requires, choose_install_requires):
 EXTRAS_REQUIREMENTS = {"desktop": ["fiftyone-desktop>=0.28.2,<0.29"]}
 
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+# with open("README.md", "r") as fh:
+#     long_description = fh.read()
 
 
 setup(
@@ -131,7 +131,7 @@ setup(
     url="https://github.com/voxel51/fiftyone",
     extras_require=EXTRAS_REQUIREMENTS,
     license="Apache",
-    long_description=long_description,
+    long_description="long_description",
     long_description_content_type="text/markdown",
     packages=find_packages(
         exclude=["app", "eta", "package", "requirements", "tests", "tools"]
