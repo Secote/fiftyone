@@ -5,6 +5,8 @@ FiftyOne Server /samples route
 | `voxel51.com <https://voxel51.com/>`_
 |
 """
+import time
+import cachetools
 from starlette.endpoints import HTTPEndpoint
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -15,7 +17,7 @@ from fiftyone.core.utils import run_sync_task
 from fiftyone.server.decorators import route
 from fiftyone.server.filters import GroupElementFilter, SampleFilter
 from fiftyone.server.samples import paginate_samples
-
+lru_cache = cachetools.LRUCache(100)
 
 class Samples(HTTPEndpoint):
     @route
@@ -24,9 +26,13 @@ class Samples(HTTPEndpoint):
         dataset = data.get("dataset", None)
         stages = data.get("view", None)
         page = data.get("page", 1)
-        page_length = data.get("page_length", 20)
+        page_length = data.get("page_length", 10)
         slice = data.get("slice", None)
         extended = data.get("extended", None)
+        cache_key = f"samples:{dataset}:{page}:{page_length}"
+        if page < 5 and cache_key in lru_cache:
+            return JSONResponse(lru_cache[cache_key])
+        start_time = time.time()
         results = await paginate_samples(
             dataset,
             stages,
@@ -39,12 +45,14 @@ class Samples(HTTPEndpoint):
             extended_stages=extended,
             pagination_data=True,
         )
-
-        return JSONResponse(
-            {
-                "results": await run_sync_task(
-                    lambda: [stringify(edge.node) for edge in results.edges]
-                ),
-                "more": results.page_info.has_next_page,
-            }
-        )
+        ret = {
+            "results": await run_sync_task(
+                lambda: [stringify(edge.node) for edge in results.edges]
+            ),
+            "more": results.page_info.has_next_page,
+        }
+        end_time = time.time()
+        print('time', end_time - start_time)
+        if page < 4 and end_time - start_time > 2:
+            lru_cache[cache_key] = ret
+        return JSONResponse(ret)

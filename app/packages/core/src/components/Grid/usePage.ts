@@ -6,7 +6,7 @@ import { useErrorHandler } from "react-error-boundary";
 import { useRecoilCallback } from "recoil";
 import { pageParameters } from "./recoil";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 15;
 
 const usePage = (modal: boolean, store: LookerStore<Lookers>): Get<number> => {
   const handleError = useErrorHandler();
