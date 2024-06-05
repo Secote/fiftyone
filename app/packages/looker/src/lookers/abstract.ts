@@ -101,6 +101,7 @@ export abstract class AbstractLooker<
     this.eventTarget = new EventTarget();
     this.updater = this.makeUpdate();
     this.state = this.getInitialState(config, options);
+    // console.log('initSample===', config, this.state)
     this.loadSample(sample);
     this.state.options.mimetype = getMimeType(sample);
     this.pluckedOverlays = [];
@@ -605,9 +606,10 @@ export abstract class AbstractLooker<
       }
     };
     labelsWorker.addEventListener("message", listener);
-
+    console.log('labelsWorker.postMessage====')
     labelsWorker.postMessage({
       sample: sample as ProcessSample["sample"],
+      thumbnail: this.state.config.thumbnail,
       method: "processSample",
       coloring: this.state.options.coloring,
       customizeColorSetting: this.state.options.customizeColorSetting,

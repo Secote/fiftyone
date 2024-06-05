@@ -29,7 +29,7 @@
 #
 
 # The base image to build from; must be Debian-based (eg Ubuntu)
-ARG BASE_IMAGE=ubuntu:20.04
+ARG BASE_IMAGE=ubuntu:18.04
 FROM $BASE_IMAGE
 
 # The Python version to install

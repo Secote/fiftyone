@@ -20,6 +20,8 @@ if os.environ.get("FIFTYONE_DISABLE_SERVICES", False):
     del os.environ["FIFTYONE_DISABLE_SERVICES"]
 
 os.environ["FIFTYONE_SERVER"] = "1"
+# os.environ["FIFTYONE_MAX_THREAD_POOL_WORKERS"] = '10'
+# os.environ["FIFTYONE_DATABASE_URI"] = "mongodb://172.31.20.72:27017"
 
 import fiftyone as fo
 import fiftyone.constants as foc

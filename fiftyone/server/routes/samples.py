@@ -17,6 +17,8 @@ from fiftyone.core.utils import run_sync_task
 from fiftyone.server.decorators import route
 from fiftyone.server.filters import GroupElementFilter, SampleFilter
 from fiftyone.server.samples import paginate_samples
+import logging
+logger = logging.getLogger(__name__)
 lru_cache = cachetools.LRUCache(100)
 
 class Samples(HTTPEndpoint):
@@ -31,7 +33,8 @@ class Samples(HTTPEndpoint):
         extended = data.get("extended", None)
         cache_key = f"samples:{dataset}:{page}:{page_length}"
         if page < 5 and cache_key in lru_cache:
-            return JSONResponse(lru_cache[cache_key])
+            logger.info(cache_key)
+            return lru_cache[cache_key]
         start_time = time.time()
         results = await paginate_samples(
             dataset,
@@ -45,14 +48,18 @@ class Samples(HTTPEndpoint):
             extended_stages=extended,
             pagination_data=True,
         )
-        ret = {
-            "results": await run_sync_task(
-                lambda: [stringify(edge.node) for edge in results.edges]
-            ),
-            "more": results.page_info.has_next_page,
-        }
+        try:
+            ret = JSONResponse({
+                "results": await run_sync_task(
+                    lambda: [stringify(edge.node) for edge in results.edges]
+                ),
+                "more": results.page_info.has_next_page,
+            })
+        except:
+            return JSONResponse({})
         end_time = time.time()
-        print('time', end_time - start_time)
+        logger.info(end_time)
+        logger.info(start_time)
         if page < 4 and end_time - start_time > 2:
             lru_cache[cache_key] = ret
-        return JSONResponse(ret)
+        return ret

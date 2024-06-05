@@ -102,7 +102,8 @@ const imputeOverlayFromPath = async (
   coloring: Coloring,
   customizeColorSetting: CustomizeColor[],
   buffers: ArrayBuffer[],
-  sources: { [path: string]: string }
+  sources: { [path: string]: string },
+  thumbnail: boolean = true
 ) => {
   // handle all list types here
   if (label._cls === DETECTIONS) {
@@ -113,12 +114,12 @@ const imputeOverlayFromPath = async (
         coloring,
         customizeColorSetting,
         buffers,
-        {}
+        {},
+        thumbnail
       )
     );
     return;
   }
-
   // overlay path is in `map_path` property for heatmap, or else, it's in `mask_path` property (for segmentation or detection)
   const overlayPathField = label._cls === HEATMAP ? "map_path" : "mask_path";
   const overlayField = overlayPathField === "map_path" ? "map" : "mask";
@@ -132,8 +133,11 @@ const imputeOverlayFromPath = async (
   }
 
   // convert absolute file path to a URL that we can "fetch" from
+  // const overlayImageUrl = getSampleSrc('/fiftyone/segformer/job_66309254feb90400254a3fcb/images/Validation/abc/1.jpg')
+  const maskPath = sources[`${field}.${overlayPathField}`] || label[overlayPathField]
+  
   const overlayImageUrl = getSampleSrc(
-    sources[`${field}.${overlayPathField}`] || label[overlayPathField]
+    thumbnail ? maskPath.replace(/\.(jpg|png)$/, '_thumbnail.jpg') : maskPath
   );
 
   const overlayImageBuffer: ArrayBuffer = await getFetchFunction()(
@@ -189,7 +193,8 @@ const processLabels = async (
   coloring: ProcessSample["coloring"],
   prefix = "",
   sources: { [key: string]: string },
-  customizeColorSetting: ProcessSample["customizeColorSetting"]
+  customizeColorSetting: ProcessSample["customizeColorSetting"],
+  thumbnail: boolean = true
 ): Promise<ArrayBuffer[]> => {
   const buffers: ArrayBuffer[] = [];
   const promises = [];
@@ -211,10 +216,11 @@ const processLabels = async (
           coloring,
           customizeColorSetting,
           buffers,
-          sources
+          sources,
+          thumbnail,
         );
       }
-
+      
       if (label._cls in DeserializerFactory) {
         DeserializerFactory[label._cls](label, buffers);
       }
@@ -225,7 +231,8 @@ const processLabels = async (
           coloring,
           `${prefix}${field}.`,
           sources,
-          customizeColorSetting
+          customizeColorSetting,
+          thumbnail
         );
       }
 
@@ -274,12 +281,14 @@ export interface ProcessSample {
   coloring: Coloring;
   customizeColorSetting: CustomizeColor[];
   sources: { [path: string]: string };
+  thumbnail: boolean
 }
 
 type ProcessSampleMethod = ReaderMethod & ProcessSample;
 
 const processSample = ({
   sample,
+  thumbnail,
   uuid,
   coloring,
   sources,
@@ -293,7 +302,7 @@ const processSample = ({
     process3DLabels(sample);
   } else {
     bufferPromises = [
-      processLabels(sample, coloring, null, sources, customizeColorSetting),
+      processLabels(sample, coloring, null, sources, customizeColorSetting, thumbnail),
     ];
   }
 
@@ -307,7 +316,8 @@ const processSample = ({
             coloring,
             "frames.",
             sources,
-            customizeColorSetting
+            customizeColorSetting,
+            thumbnail
           )
         )
         .flat(),
@@ -318,6 +328,7 @@ const processSample = ({
     postMessage(
       {
         method: "processSample",
+        thumbnail,
         sample,
         coloring,
         uuid,
@@ -526,6 +537,7 @@ type Method =
 
 if (typeof onmessage !== "undefined") {
   onmessage = ({ data: { method, ...args } }: MessageEvent<Method>) => {
+    // console.log('first  333', method, args)
     switch (method) {
       case "init":
         init(args as Init);

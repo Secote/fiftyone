@@ -181,12 +181,17 @@ const Looker = ({
 
   useEffect(() => {
     const hoveredSampleId = hoveredSample && hoveredSample._id;
+    console.log('useEffect===updateState')
     looker.updater((state) => ({
       ...state,
       shouldHandleKeyEvents: hoveredSampleId === sample._id,
       options: {
         ...state.options,
       },
+      config: {
+        ...state.config,
+        thumbnail: false,
+      }
     }));
   }, [hoveredSample, sample, looker]);
 

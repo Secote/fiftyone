@@ -106,7 +106,9 @@ export default <T extends AbstractLooker>(
           ] as string;
         }
       }
-
+      if (thumbnail && sampleMediaFilePath) {
+        sampleMediaFilePath = sampleMediaFilePath.replace(/\.(jpg|png)$/, '_thumbnail.jpg').replace(/(Validation|Train)/, '$1/mask');
+      }
       const config: ConstructorParameters<T>[1] = {
         fieldSchema: {
           ...fieldSchema,
