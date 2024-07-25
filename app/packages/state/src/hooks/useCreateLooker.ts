@@ -106,8 +106,10 @@ export default <T extends AbstractLooker>(
           ] as string;
         }
       }
-      if (thumbnail && sampleMediaFilePath) {
-        sampleMediaFilePath = sampleMediaFilePath.replace(/\.(jpg|png)$/, '_thumbnail.jpg').replace(/(Validation|Train)/, '$1/mask');
+      if (thumbnail && sampleMediaFilePath && sampleMediaFilePath.includes('segformer')) {
+        if (/\.(jpg|png|bmp|jpeg|webp)$/.test(sampleMediaFilePath) && !sampleMediaFilePath.includes('_thumbnail.jpg') ) {
+          sampleMediaFilePath = sampleMediaFilePath.replace(/\.(jpg|png|bmp|jpeg|webp)$/, '_thumbnail.jpg').replace(/(Validation|Train|Test)/, '$1/mask');
+        }
       }
       const config: ConstructorParameters<T>[1] = {
         fieldSchema: {

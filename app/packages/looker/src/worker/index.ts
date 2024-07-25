@@ -137,7 +137,7 @@ const imputeOverlayFromPath = async (
   const maskPath = sources[`${field}.${overlayPathField}`] || label[overlayPathField]
   
   const overlayImageUrl = getSampleSrc(
-    thumbnail ? maskPath.replace(/\.(jpg|png)$/, '_thumbnail.jpg') : maskPath
+    thumbnail && !maskPath.includes('_thumbnail.jpg') ? maskPath.replace(/\.(jpg|png|bmp|jpeg|webp)$/, '_thumbnail.jpg') : maskPath
   );
 
   const overlayImageBuffer: ArrayBuffer = await getFetchFunction()(
